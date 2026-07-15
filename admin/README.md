@@ -1,4 +1,4 @@
-# Painel Admin — Imobiliária Geraldo Gama
+# Painel Admin — LGN
 
 ## Requisitos
 
@@ -49,16 +49,15 @@ O link de redefinição aparece no console do servidor (modo debug). Em produç�
 1. Importe o `render.yaml` da raiz do projeto no Render
 2. O serviço já vem configurado para a pasta `admin/`
 3. Adicione as variáveis de ambiente no painel do Render:
-    - `MONGODB_URI`
-    - `JWT_SECRET` (gere uma string aleatória longa)
-- `CLOUDINARY_CLOUD_NAME`
-- `CLOUDINARY_API_KEY`
-- `CLOUDINARY_API_SECRET`
-- `mapaUrl` no cadastro do imóvel é opcional e vira o link do ícone de mapa na home
-- `BASE_URL` (URL do seu site no Render, ex: https://seu-admin.onrender.com)
-    - `ADMIN_EMAIL=quintana.mqf@gmail.com`
-    - `ADMIN_PASSWORD=admin`
-    - `ADMIN_NAME=Geraldo Gama`
-    - `JWT_EXPIRES_IN` (opcional, padrão `7d`)
-    - `SENDGRID_API_KEY` e `SENDGRID_FROM` (opcionais, para reset de senha por email)
+   - `MONGODB_URI`
+   - `JWT_SECRET` (gere uma string aleatória longa)
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+   - `BASE_URL` (URL do seu site no Render, ex: https://seu-admin.onrender.com)
+   - `ADMIN_EMAIL` (seu email de login)
+   - `ADMIN_PASSWORD` (sua senha de login)
+   - `ADMIN_NAME=LGN`
+   - `JWT_EXPIRES_IN` (opcional, padrão `7d`)
+   - `SENDGRID_API_KEY` e `SENDGRID_FROM` (opcionais, para reset de senha por email)
 4. Deploy!

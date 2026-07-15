@@ -61,7 +61,7 @@ router.post("/forgot-password", async (req, res) => {
         await sgMail.send({
           to: user.email,
           from: process.env.SENDGRID_FROM || user.email,
-          subject: "Redefinição de senha — Imobiliária Geraldo Gama",
+          subject: "Redefinição de senha — LGN",
           html: `<p>Olá ${user.name},</p>
 <p>Recebemos uma solicitação para redefinir sua senha do painel admin.</p>
 <p><a href="${resetLink}" style="display:inline-block;padding:12px 24px;background:#1f8a55;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Redefinir senha</a></p>

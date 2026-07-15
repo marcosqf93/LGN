@@ -16,7 +16,7 @@ body {
   margin: 0;
   font-family: "Manrope", sans-serif;
   color: var(--text);
-  background: var(--bg-gradient), url("https://lh3.googleusercontent.com/gps-cs-s/APNQkAEcw9urbZnE45mjWAKOVCR3nNeAaH7wBAjobHuXhFOWt1ztesIdbj964A4WF-Mz7MZqpEXJ0tyvQ8-4oqvesn-c8yaES9kZE9BMyiqRQ2V8oHdm_lLtiL1_57ul7SvKJrSHNqk1=s680-w680-h510-rw") center/cover fixed;
+  background: linear-gradient(165deg, rgba(14,15,18,.88) 0%, rgba(127,34,48,.62) 55%, rgba(194,75,88,.38) 100%), url("https://i.postimg.cc/sXMSBmS1/Chat-GPT-Image-14-de-jul-de-2026-16-27-10.png") center/cover fixed;
   min-height: 100vh;
 }
 
@@ -140,6 +140,10 @@ body {
 .thumb-list { display: flex; gap: 3px; flex-wrap: wrap; }
 .thumb-list img { width: 36px; height: 28px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); }
 .dash-empty { display: none; text-align: center; color: var(--muted); padding: 2rem; font-size: .9rem; background: rgba(255,255,255,.5); border-radius: 14px; }
+
+.auth-page {
+  background: linear-gradient(165deg, rgba(14,15,18,.86) 0%, rgba(127,34,48,.58) 55%, rgba(194,75,88,.3) 100%), url("https://i.postimg.cc/sXMSBmS1/Chat-GPT-Image-14-de-jul-de-2026-16-27-10.png") center/cover fixed;
+}
 
 /* ----- Modal ----- */
 .modal-overlay {

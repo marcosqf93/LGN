@@ -27,7 +27,7 @@ services:
       - key: ADMIN_PASSWORD
         value: admin
       - key: ADMIN_NAME
-        value: Geraldo Gama
+        value: LGN
       - key: SENDGRID_API_KEY
         sync: false
       - key: SENDGRID_FROM

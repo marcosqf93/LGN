@@ -45,14 +45,19 @@ mongoose
     console.log("MongoDB connected");
 
     const User = require("./models/User");
+    const adminName = process.env.ADMIN_NAME || "LGN";
     const existing = await User.findOne({ email: process.env.ADMIN_EMAIL });
     if (!existing) {
       await User.create({
-        name: process.env.ADMIN_NAME || "Geraldo Gama",
+        name: adminName,
         email: process.env.ADMIN_EMAIL,
         password: process.env.ADMIN_PASSWORD,
       });
       console.log("Admin user created");
+    } else if (adminName && existing.name !== adminName) {
+      existing.name = adminName;
+      await existing.save();
+      console.log("Admin user name updated");
     }
 
     app.listen(PORT, () => {
