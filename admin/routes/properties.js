@@ -15,7 +15,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "geraldo-gama",
+    folder: "lgn",
     allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
     transformation: [{ width: 1200, height: 900, crop: "limit", quality: "auto" }],
   },
