@@ -48,6 +48,7 @@
             <th>Tipo</th>
             <th>Finalidade</th>
             <th>Cidade</th>
+            <th>Status</th>
             <th>Valor</th>
             <th>Imagens</th>
             <th style="width:120px">Ações</th>
@@ -115,6 +116,13 @@
               <input name="destaque" type="checkbox" />
               Em destaque
             </label>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:.5rem;font-weight:700">
+              <input name="ativo" type="checkbox" checked />
+              Exibir no site
+            </label>
+            <div class="field-help">Desmarque para ocultar o imóvel do site quando estiver alugado ou indisponível.</div>
           </div>
           <div class="field"><label>Descrição</label><textarea name="descricao" rows="3" placeholder="Descrição do imóvel..."></textarea></div>
           <div class="field"><label>Imagens</label>

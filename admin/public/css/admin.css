@@ -66,6 +66,12 @@ body {
 .auth-link { display: block; margin-top: .8rem; font-size: .82rem; color: var(--primary-deep); text-decoration: none; }
 .auth-link:hover { text-decoration: underline; }
 
+.field-help {
+  margin-top: .2rem;
+  font-size: .75rem;
+  color: var(--muted);
+}
+
 /* ----- Dashboard ----- */
 .dash-header {
   position: sticky; top: 0; z-index: 30;
@@ -129,6 +135,24 @@ body {
 }
 .dash-table td { padding: .55rem .6rem; border-top: 1px solid var(--line); vertical-align: middle; }
 .dash-table tr:hover td { background: rgba(71,82,97,.04); }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+.status-badge.is-active {
+  background: rgba(71,82,97,.12);
+  color: var(--primary-deep);
+}
+.status-badge.is-hidden {
+  background: rgba(23,35,44,.08);
+  color: var(--muted);
+}
 .dash-table .actions { display: flex; gap: .35rem; flex-wrap: nowrap; }
 .dash-table .actions button {
   padding: .3rem .5rem; border: 0; border-radius: 8px; cursor: pointer; font-size: .75rem;

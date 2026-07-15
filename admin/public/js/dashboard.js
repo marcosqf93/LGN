@@ -93,6 +93,7 @@
             <td>${esc(p.tipo)}</td>
             <td>${esc(p.finalidade)}</td>
             <td>${esc(p.cidade)}</td>
+            <td><span class="status-badge ${p.ativo === false ? "is-hidden" : "is-active"}">${p.ativo === false ? "Oculto" : "Ativo"}</span></td>
             <td>${p.valorVenda ? "R$ " + fmt(p.valorVenda) : ""}${p.valorVenda && p.valorLocacao ? " / " : ""}${p.valorLocacao ? "R$ " + fmt(p.valorLocacao) + "/mês" : ""}</td>
             <td><div class="thumb-list">${(p.imagens || []).slice(0, 4).map((i) => `<img src="${i}" alt="" />`).join("")}</div></td>
             <td>
