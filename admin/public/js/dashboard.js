@@ -190,13 +190,13 @@
         headers: { Authorization: "Bearer " + token },
         body: fd,
       });
-      if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
+      if (!res.ok) throw new Error(data.details || data.error || "Upload failed");
       uploadedImages = uploadedImages.concat(data.urls);
       renderPreview();
       imagensInput.value = JSON.stringify(uploadedImages);
     } catch (err) {
-      formError.textContent = "Erro ao fazer upload das imagens.";
+      formError.textContent = `Erro ao fazer upload das imagens.${err?.message ? ` ${err.message}` : ""}`;
     }
     imageUpload.value = "";
   });
