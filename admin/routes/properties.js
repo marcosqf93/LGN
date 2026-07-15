@@ -22,6 +22,15 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
+function uploadImages(req, res, next) {
+  upload.array("imagens", 10)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: "Erro no upload das imagens.", details: err.message });
+    }
+    next();
+  });
+}
+
 function normalizePropertyPayload(payload = {}) {
   return {
     ...payload,
@@ -29,12 +38,15 @@ function normalizePropertyPayload(payload = {}) {
   };
 }
 
-router.post("/upload", auth, upload.array("imagens", 10), async (req, res) => {
+router.post("/upload", auth, uploadImages, async (req, res) => {
   try {
+    if (!req.files || !req.files.length) {
+      return res.status(400).json({ error: "Nenhuma imagem enviada." });
+    }
     const urls = req.files.map((f) => f.path);
     res.json({ urls });
   } catch (err) {
-    res.status(500).json({ error: "Erro no upload das imagens." });
+    res.status(500).json({ error: "Erro no upload das imagens.", details: err.message });
   }
 });
 
