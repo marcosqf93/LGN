@@ -1,4 +1,4 @@
-# Painel Admin — LGN
+# Painel Admin — LGN Empreendimentos Imobiliários
 
 ## Requisitos
 
