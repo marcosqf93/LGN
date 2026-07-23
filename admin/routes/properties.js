@@ -23,7 +23,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 function uploadImages(req, res, next) {
-  upload.array("imagens", 10)(req, res, (err) => {
+  upload.array("imagens", 20)(req, res, (err) => {
     if (err) {
       return res.status(400).json({ error: "Erro no upload das imagens.", details: err.message });
     }
@@ -34,7 +34,8 @@ function uploadImages(req, res, next) {
 function normalizePropertyPayload(payload = {}) {
   return {
     ...payload,
-    metragem: Number(payload.metragem) || 0,
+    areaTotal: Number(payload.areaTotal ?? payload.metragem) || 0,
+    areaConstruida: Number(payload.areaConstruida ?? payload.metragem) || 0,
   };
 }
 

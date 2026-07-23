@@ -93,6 +93,7 @@
             <td>${esc(p.tipo)}</td>
             <td>${esc(p.finalidade)}</td>
             <td>${esc(p.cidade)}</td>
+            <td><span class="status-badge ${p.destaque ? "is-featured" : "is-muted"}">${p.destaque ? "Destaque" : "Normal"}</span></td>
             <td><span class="status-badge ${p.ativo === false ? "is-hidden" : "is-active"}">${p.ativo === false ? "Oculto" : "Ativo"}</span></td>
             <td>${p.valorVenda ? "R$ " + fmt(p.valorVenda) : ""}${p.valorVenda && p.valorLocacao ? " / " : ""}${p.valorLocacao ? "R$ " + fmt(p.valorLocacao) + "/mês" : ""}</td>
             <td><div class="thumb-list">${(p.imagens || []).slice(0, 4).map((i) => `<img src="${i}" alt="" />`).join("")}</div></td>
@@ -229,6 +230,7 @@
     const data = {};
     for (const [k, v] of fd.entries()) {
       if (k === "imagens") continue;
+      if (k === "metragem") continue;
       const el = form.elements[k];
       if (el && el.type === "number") data[k] = parseNumber(v);
       else if (el && el.type === "checkbox") data[k] = el.checked;
@@ -277,7 +279,10 @@
     const res = await api("/" + id);
     if (!res.ok) return;
     const data = await res.json();
-    openModal("Editar imóvel", data.property);
+    const property = data.property || {};
+    if (property.metragem && !property.areaTotal) property.areaTotal = property.metragem;
+    if (property.metragem && !property.areaConstruida) property.areaConstruida = property.metragem;
+    openModal("Editar imóvel", property);
   }
 
   /* ---- delete ---- */

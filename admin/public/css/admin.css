@@ -153,6 +153,14 @@ body {
   background: rgba(23,35,44,.08);
   color: var(--muted);
 }
+.status-badge.is-featured {
+  background: rgba(194,75,88,.12);
+  color: #7f2230;
+}
+.status-badge.is-muted {
+  background: rgba(71,82,97,.08);
+  color: var(--muted);
+}
 .dash-table .actions { display: flex; gap: .35rem; flex-wrap: nowrap; }
 .dash-table .actions button {
   padding: .3rem .5rem; border: 0; border-radius: 8px; cursor: pointer; font-size: .75rem;
@@ -161,6 +169,24 @@ body {
 .dash-table .actions button:hover { transform: translateY(-1px); }
 .btn-edit { background: rgba(71,82,97,.12); color: var(--primary-deep); }
 .btn-delete { background: rgba(192,57,43,.1); color: #c0392b; }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .25rem .55rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+}
+.status-badge.is-active {
+  background: rgba(71,82,97,.12);
+  color: var(--primary-deep);
+}
+.status-badge.is-hidden {
+  background: rgba(23,35,44,.08);
+  color: var(--muted);
+}
 .thumb-list { display: flex; gap: 3px; flex-wrap: wrap; }
 .thumb-list img { width: 36px; height: 28px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); }
 .dash-empty { display: none; text-align: center; color: var(--muted); padding: 2rem; font-size: .9rem; background: rgba(255,255,255,.5); border-radius: 14px; }

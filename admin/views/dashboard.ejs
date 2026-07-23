@@ -48,7 +48,8 @@
             <th>Tipo</th>
             <th>Finalidade</th>
             <th>Cidade</th>
-            <th>Status</th>
+            <th>Destaque</th>
+            <th>Site</th>
             <th>Valor</th>
             <th>Imagens</th>
             <th style="width:120px">Ações</th>
@@ -100,8 +101,8 @@
             <div class="form-row">
               <div class="field"><label>Área de Serviço</label><input name="areaServico" type="number" min="0" /></div>
               <div class="field"><label>Copa</label><input name="copa" type="number" min="0" /></div>
-               <div class="field"><label>Metragem (m²)</label><input name="metragem" type="number" min="0" step="any" inputmode="decimal" /></div>
-              <div class="field"></div>
+               <div class="field"><label>Área total (m²)</label><input name="areaTotal" type="number" min="0" step="any" inputmode="decimal" /></div>
+               <div class="field"><label>Área construída (m²)</label><input name="areaConstruida" type="number" min="0" step="any" inputmode="decimal" /></div>
             </div>
           </fieldset>
           <fieldset class="form-fieldset">
@@ -127,6 +128,7 @@
           <div class="field"><label>Descrição</label><textarea name="descricao" rows="3" placeholder="Descrição do imóvel..."></textarea></div>
           <div class="field"><label>Imagens</label>
             <input id="image-upload" type="file" accept="image/*" multiple />
+            <div class="field-help">Você pode enviar até 20 imagens por vez.</div>
             <div class="image-preview" id="image-preview"></div>
             <input type="hidden" name="imagens" id="imagens-input" value="[]" />
           </div>

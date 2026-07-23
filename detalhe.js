@@ -1,5 +1,5 @@
 async function initDetail() {
-  const API_URL = "https://geraldo-gama-admin.onrender.com/api/properties?limit=500";
+  const API_URL = "https://lgn-admin-80oh.onrender.com/api/properties?limit=500";
   const box = document.getElementById("detalhe");
 
   if (box) {
@@ -57,6 +57,7 @@ async function initDetail() {
       cidade: extra.cidade || item.cidade || "",
       bairro: extra.bairro || item.bairro || "",
       endereco: extra.endereco || item.endereco || item.bairro || "",
+      mapaUrl: extra.mapaUrl || item.mapaUrl || "",
       fotos: photos,
       imagem: photos[0] || "",
       dormitorios: Number(item.dormitorios || 0),
@@ -70,8 +71,10 @@ async function initDetail() {
       areaGourmet: Number(item.areaGourmet || 0),
       areaServico: Number(item.areaServico || 0),
       copa: Number(item.copa || 0),
-      area: extra.area || item.area || (item.metragem ? `${item.metragem} m²` : ""),
-      metragem: Number(item.metragem || 0),
+      areaTotal: Number(item.areaTotal ?? item.metragem ?? 0),
+      areaConstruida: Number(item.areaConstruida ?? item.metragem ?? 0),
+      area: extra.area || item.area || (item.areaTotal || item.areaConstruida || item.metragem ? `${item.areaTotal || item.areaConstruida || item.metragem} m²` : ""),
+      metragem: Number(item.metragem || item.areaTotal || item.areaConstruida || 0),
       venda: item.venda || formatMoney(item.valorVenda),
       locacao: item.locacao || formatMoney(item.valorLocacao),
       destaque: Boolean(item.destaque ?? extra.destaque),
@@ -91,6 +94,15 @@ async function initDetail() {
     if (value === "ambos") return "Venda e locação";
     if (value === "venda") return "Venda";
     return "Locação";
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function featureIcon(type) {
@@ -113,6 +125,14 @@ async function initDetail() {
     return icons[type] || icons.dormitorios;
   }
 
+  function iconSvg(name) {
+    const icons = {
+      city: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V8l4-2v14"/><path d="M8 20V5l5-2v17"/><path d="M13 20v-9l7-3v12"/></svg>',
+      bairro: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5 6-11a6 6 0 0 0-12 0c0 6 6 11 6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>',
+    };
+    return icons[name] || icons.city;
+  }
+
   function detailCards(item, acao, preco) {
     const cards = [];
     const isMoneyValid = (value) => parseFloat(String(value || "").replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".")) > 0;
@@ -126,10 +146,8 @@ async function initDetail() {
       cards.push({ type: "feature", key, label, value: n });
     };
 
-    pushText("Finalidade", acao);
-    pushText("Área", item.area && item.area !== "0" && item.area !== "0 m²" ? item.area : "");
-    if (preco && item.finalidade !== "aluguel" && isMoneyValid(item.venda)) pushText("Venda", item.venda);
-    if (preco && item.finalidade !== "venda" && isMoneyValid(item.locacao)) pushText("Locação", item.locacao);
+    pushText("Área total", item.areaTotal ? `${item.areaTotal} m²` : item.area && item.area !== "0" && item.area !== "0 m²" ? item.area : "");
+    pushText("Área construída", item.areaConstruida ? `${item.areaConstruida} m²` : "");
     pushFeature("suites", "Suíte", item.suites);
     pushFeature("dormitorios", "Dormitório", item.dormitorios);
     pushFeature("banheiros", "Banheiro", item.banheiros);
@@ -140,7 +158,6 @@ async function initDetail() {
     pushFeature("copa", "Copa", item.copa);
     pushFeature("varandas", "Varanda", item.varandas);
     pushFeature("vagas", "Garagem", item.garagens || item.vagas);
-    pushFeature("metragem", "Metragem", item.metragem);
     return cards;
   }
 
@@ -190,7 +207,8 @@ async function initDetail() {
     } catch (err) {
       // usa fallback local
     }
-    return IMOVEIS.map((item) => {
+    const baseImoveis = typeof IMOVEIS !== "undefined" ? IMOVEIS : [];
+    return baseImoveis.map((item) => {
       const extra = (typeof IMOVEIS_ENRICHMENT !== "undefined" && IMOVEIS_ENRICHMENT[item.referencia]) || {};
       return normalizeProperty({ ...item, imagens: [item.imagem] }, extra);
     }).filter((item) => item.ativo !== false);
@@ -224,7 +242,15 @@ async function initDetail() {
     const preco = imovel.venda !== "R$ 0,00" && imovel.venda !== "Consultar" ? imovel.venda
       : imovel.locacao !== "R$ 0,00" && imovel.locacao !== "Consultar" ? imovel.locacao
       : null;
+    const valueLabel = preco || "Consulte";
     const highlightCards = detailCards(imovel, acao, preco);
+    const addressLine = [imovel.endereco, imovel.bairro, imovel.cidade].filter(Boolean).join(", ");
+    const mapQuery = encodeURIComponent(addressLine || imovel.cidade || imovel.bairro || "");
+    const hasEmbeddableMapUrl = typeof imovel.mapaUrl === "string" && /(?:output=embed|\/embed\b|\/maps\/embed)/i.test(imovel.mapaUrl);
+    const mapEmbedSrc = hasEmbeddableMapUrl ? imovel.mapaUrl : `https://www.google.com/maps?q=${mapQuery}&output=embed`;
+    const mapOpenHref = imovel.mapaUrl || `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+    const whatsAppSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3.2 16.8L2 22l5.4-1.4A11 11 0 1 0 20.5 3.5zm-8.9 16.1a9 9 0 0 1-4.6-1.3l-.3-.2-3.2.8.9-3.1-.2-.3A9 9 0 1 1 11.6 19.6zm5.2-6.8c-.3-.2-1.8-.9-2-1s-.4-.2-.6.2-.7 1-.9 1.2-.3.2-.6.1a7.2 7.2 0 0 1-2.1-1.3 7.9 7.9 0 0 1-1.5-1.8c-.2-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5s0-.3 0-.5-.6-1.4-.8-1.9-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3s-.9.9-.9 2.3.9 2.7 1 2.9c.1.2 1.8 2.8 4.3 3.8.6.3 1.1.4 1.5.6.6.2 1.1.2 1.5.1.5-.1 1.8-.7 2.1-1.3.3-.6.3-1.1.2-1.3s-.3-.2-.6-.4z"/></svg>';
+    const shareSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>';
 
     const seoTitle = `${imovel.endereco} - ${imovel.tipo} em ${imovel.cidade} | LGN Empreendimentos Imobiliários`;
     const seoDesc = `${imovel.tipo} ${imovel.finalidade === "venda" ? "à venda" : imovel.finalidade === "aluguel" ? "para locação" : "para venda e locação"} em ${imovel.cidade}. ${imovel.dormitorios} dormitório(s), ${imovel.vagas} vaga(s), ${imovel.area}. Fale com a LGN Empreendimentos Imobiliários.`;
@@ -281,45 +307,67 @@ async function initDetail() {
       .filter((item) => item.referencia !== imovel.referencia)
       .filter((item) => item.tipo === imovel.tipo || item.cidade === imovel.cidade || item.finalidade === imovel.finalidade)
       .slice(0, 3);
+    const gallerySidePhotos = fotos.slice(1, 5);
 
   box.innerHTML = `
     <article class="detail-wrap reveal show">
       <div class="detail-badge-destaque">Em destaque</div>
       <div class="gallery-premium">
-        <div class="gallery-main" id="gallery-main">
+        <div class="gallery-hero">
+          <div class="gallery-main" id="gallery-main" tabindex="0" role="button" aria-label="Abrir foto em tela cheia">
           <img ${responsiveImageAttrs(fotos[0], `Imagem 1 do imóvel ${imovel.referencia}`, { width: 1200, height: 800, sizes: "(max-width: 768px) 100vw, 50vw", loading: "eager", fetchpriority: "high" })} class="gallery-main-img" id="gallery-main-img" />
           <button type="button" class="gallery-open-btn" id="gallery-open-btn" aria-label="Abrir foto em tela cheia">Ampliar</button>
           <div class="gallery-counter"><span id="gallery-idx">1</span> / ${fotos.length} fotos</div>
           ${fotos.length > 1 ? '<button class="slide-btn prev" id="prev-photo" aria-label="Foto anterior">\u2039</button><button class="slide-btn next" id="next-photo" aria-label="Próxima foto">\u203A</button>' : ''}
+          </div>
+          <div class="gallery-side" id="gallery-side">
+            ${gallerySidePhotos.map((f, i) => {
+              const absoluteIndex = i + 1;
+              const isLast = i === 3 && fotos.length > 5;
+              const label = isLast ? `+${fotos.length - 5}` : `Foto ${absoluteIndex + 1}`;
+              return `<button type="button" class="gallery-side-thumb gallery-preview-btn ${i === 0 ? 'active' : ''}" data-index="${absoluteIndex}" aria-label="Foto ${absoluteIndex + 1}"><img ${responsiveImageAttrs(f, `Miniatura ${absoluteIndex + 1}`, { width: 360, height: 260, loading: "lazy" })} /><span class="gallery-side-overlay">${label}</span></button>`;
+            }).join('')}
+          </div>
+        </div>
+        <div class="gallery-dots" id="gallery-dots">
+          ${fotos.map((_, i) => `<button type="button" class="gallery-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Ir para a foto ${i + 1}"></button>`).join('')}
         </div>
         <div class="gallery-thumbs" id="gallery-thumbs">
           ${fotos.map((f, i) => `<button class="gallery-thumb ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Foto ${i + 1}"><img ${responsiveImageAttrs(f, `Miniatura ${i + 1}`, { width: 200, height: 150, loading: "lazy" })} /></button>`).join('')}
         </div>
       </div>
       <div class="detail-content">
-        <p class="eyebrow">Referência ${imovel.referencia} - ${imovel.tipo}</p>
-        <h1>${imovel.endereco}</h1>
-        <p class="detail-city">${imovel.cidade}</p>
+        <p class="detail-topline">${imovel.finalidade === "venda" ? "Venda" : imovel.finalidade === "aluguel" ? "Aluguel" : "Venda e locação"} | ${imovel.tipo} <a class="detail-share-inline" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" href="https://wa.me/?text=${encodeURIComponent(window.location.href)}">${shareSvg}</a></p>
+        <h1>${addressLine}</h1>
+        <div class="detail-location-row">
+          ${imovel.bairro ? `<span class="detail-location-chip"><span class="detail-location-icon">${iconSvg("bairro")}</span>${imovel.bairro}</span>` : ""}
+          ${imovel.cidade ? `<span class="detail-location-chip"><span class="detail-location-icon">${iconSvg("city")}</span>${imovel.cidade}</span>` : ""}
+        </div>
+        <div class="detail-price-mobile">${escapeHtml(valueLabel)}</div>
+        <div class="detail-mobile-cta">
+          <a class="btn detail-whatsapp-btn" href="https://wa.me/5567984724138?text=${buildInterestMessage(imovel)}" target="_blank" rel="noopener">${whatsAppSvg}<span>Tenho Interesse</span></a>
+        </div>
 
         <div class="detail-grid detail-grid-premium">
-          ${highlightCards.map((item) => item.type === "text" ? `<div class="detail-card detail-card-text"><span>${item.label}</span><strong>${item.value}</strong></div>` : `<div class="detail-card detail-card-feature" title="${item.label}: ${item.value}"><span class="detail-card-icon">${featureIcon(item.key)}</span><strong>${item.value}</strong></div>`).join("")}
+          ${highlightCards.map((item) => item.type === "text" ? `<div class="detail-card detail-card-text"><span>${item.label}</span><strong>${item.value}</strong></div>` : `<div class="detail-card detail-card-feature" title="${item.label}: ${item.value}"><span class="detail-card-icon">${featureIcon(item.key)}</span><span class="detail-card-meta"><span class="detail-card-label">${item.label}</span><strong>${item.value}</strong></span></div>`).join("")}
         </div>
 
         <p class="descricao-imovel">
+          Referência: <strong>${escapeHtml(imovel.referencia || imovel._id || "")}</strong><br>
           ${imovel.tipo} localizado em ${imovel.cidade}, na região ${imovel.endereco}. Disponibilidade para ${acao.toLowerCase()}.
           Para condições comerciais atualizadas e visita presencial, fale direto com a equipe da LGN Empreendimentos Imobiliários.
         </p>
 
+        <section class="map-interactive detail-map-box">
+          <div class="detail-map-head">
+            <p class="detail-map-address"><span class="detail-map-address-icon">${iconSvg("bairro")}</span>${escapeHtml(addressLine || imovel.endereco || imovel.bairro || imovel.cidade || "")}</p>
+          </div>
+          <iframe title="Mapa do imóvel" src="${escapeHtml(mapEmbedSrc)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </section>
+
         <div class="detail-actions">
           <a class="btn btn-primary" href="https://wa.me/5567984724138?text=${buildInterestMessage(imovel)}" target="_blank" rel="noopener">Falar sobre este imóvel</a>
           <a class="btn btn-secondary" href="/#imoveis">Voltar aos imóveis</a>
-        </div>
-
-        <div class="share-row">
-          <button class="icon-btn" id="share-native" type="button" aria-label="Compartilhar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
-          <a class="icon-btn" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" href="https://wa.me/?text=${encodeURIComponent(window.location.href)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 0 1-7.6-11.5A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8.5v.5z"/></svg></a>
-          <a class="icon-btn" target="_blank" rel="noopener" aria-label="Compartilhar no Facebook" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2z"/></svg></a>
-          <a class="icon-btn" target="_blank" rel="noopener" aria-label="Compartilhar no Instagram" href="https://www.instagram.com/lgnempreendimentosimobiliarios/"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1.5"/></svg></a>
         </div>
 
       </div>
@@ -372,7 +420,9 @@ async function initDetail() {
   let zoomed = false;
   const mainImg = document.getElementById("gallery-main-img");
   const counterEl = document.getElementById("gallery-idx");
-  const thumbs = document.querySelectorAll(".gallery-thumb");
+   const thumbs = document.querySelectorAll(".gallery-thumb, .gallery-side-thumb");
+   const mainHero = document.getElementById("gallery-main");
+   const dots = document.querySelectorAll(".gallery-dot");
   const modal = document.getElementById("gallery-modal");
   const modalImg = document.getElementById("gallery-modal-img");
   const modalCaption = document.getElementById("gallery-modal-caption");
@@ -390,8 +440,9 @@ async function initDetail() {
     if (isCloudinaryUrl(fotos[idx])) mainImg.srcset = cloudinarySrcset(fotos[idx], 1200, 800);
     else mainImg.removeAttribute("srcset");
     counterEl.textContent = idx + 1;
-    thumbs.forEach((t, i) => t.classList.toggle("active", i === idx));
-    const activeThumb = thumbs[idx];
+    thumbs.forEach((t) => t.classList.toggle("active", Number(t.dataset.index) === idx));
+    dots.forEach((d) => d.classList.toggle("active", Number(d.dataset.index) === idx));
+    const activeThumb = document.querySelector(`.gallery-thumb[data-index="${idx}"], .gallery-side-thumb[data-index="${idx}"]`);
     if (activeThumb) activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     if (modalOpen) {
       modalImg.src = fotos[idx];
@@ -427,8 +478,34 @@ async function initDetail() {
   if (prevBtn) prevBtn.addEventListener("click", () => step(-1));
   if (nextBtn) nextBtn.addEventListener("click", () => step(1));
   thumbs.forEach((t) => t.addEventListener("click", () => renderActive(parseInt(t.dataset.index, 10))));
+  dots.forEach((d) => d.addEventListener("click", () => renderActive(parseInt(d.dataset.index, 10))));
   if (openBtn) openBtn.addEventListener("click", () => openModal(photoIndex));
   mainImg.addEventListener("click", () => openModal(photoIndex));
+  if (mainHero) {
+    mainHero.addEventListener("click", () => openModal(photoIndex));
+    let touchStartX = 0;
+    let touchStartY = 0;
+    mainHero.addEventListener("touchstart", (e) => {
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, { passive: true });
+    mainHero.addEventListener("touchend", (e) => {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) step(1);
+        else step(-1);
+      }
+    }, { passive: true });
+    mainHero.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openModal(photoIndex);
+      }
+    });
+  }
   if (modalPrev) modalPrev.addEventListener("click", () => step(-1));
   if (modalNext) modalNext.addEventListener("click", () => step(1));
   if (closeBtn) closeBtn.addEventListener("click", closeModal);

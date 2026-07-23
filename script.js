@@ -1,4 +1,4 @@
-const API_URL = "https://geraldo-gama-admin.onrender.com/api/properties?limit=500";
+const API_URL = "https://lgn-admin-80oh.onrender.com/api/properties?limit=500";
 
 function formatMoney(value) {
   const num = Number(value) || 0;
@@ -45,8 +45,10 @@ function normalizeProperty(item, extra = {}) {
     areaGourmet: Number(item.areaGourmet || 0),
     areaServico: Number(item.areaServico || 0),
     copa: Number(item.copa || 0),
-    area: extra.area || item.area || (item.metragem ? `${item.metragem} m²` : ""),
-    metragem: Number(item.metragem || 0),
+    areaTotal: Number(item.areaTotal ?? item.metragem ?? 0),
+    areaConstruida: Number(item.areaConstruida ?? item.metragem ?? 0),
+    area: extra.area || item.area || (item.areaTotal || item.areaConstruida || item.metragem ? `${item.areaTotal || item.areaConstruida || item.metragem} m²` : ""),
+    metragem: Number(item.metragem || item.areaTotal || item.areaConstruida || 0),
     venda: item.venda || formatMoney(item.valorVenda),
     locacao: item.locacao || formatMoney(item.valorLocacao),
     destaque: Boolean(item.destaque ?? extra.destaque),
@@ -89,7 +91,9 @@ function responsiveImageAttrs(url, alt, options = {}) {
   return parts.join(" ");
 }
 
-const fallbackImoveis = IMOVEIS.map((item) => {
+const baseImoveis = typeof IMOVEIS !== "undefined" ? IMOVEIS : [];
+
+const fallbackImoveis = baseImoveis.map((item) => {
   const extra = (typeof IMOVEIS_ENRICHMENT !== "undefined" && IMOVEIS_ENRICHMENT[item.referencia]) || {};
   return normalizeProperty({
     ...item,
@@ -278,6 +282,16 @@ function buildHeroShowcase(items) {
 
   const state = { index: 0 };
 
+  function reorderToFront(nextIndex) {
+    if (!Number.isInteger(nextIndex) || nextIndex <= 0 || nextIndex >= picks.length) return;
+    const selected = picks.splice(nextIndex, 1)[0];
+    if (!selected) return;
+    picks.unshift(selected);
+    state.index = 0;
+    renderStrip();
+    renderMain();
+  }
+
   const mapsUrlForItem = (item) => {
     if (item.mapaUrl) return item.mapaUrl;
     const query = [item.endereco, item.bairro, item.cidade, "MS", "Brasil"]
@@ -287,8 +301,8 @@ function buildHeroShowcase(items) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || `${item.cidade || "Aquidauana"}, MS, Brasil`)}`;
   };
 
-  const renderMain = (index) => {
-    const item = picks[index] || picks[0];
+  const renderMain = () => {
+    const item = picks[state.index] || picks[0];
     if (!item) return;
     const city = escapeHtml(item.cidade || "Aquidauana");
     const bairroLabel = escapeHtml(item.bairro || "");
@@ -314,24 +328,32 @@ function buildHeroShowcase(items) {
       </article>
     `;
 
-    heroShowcaseStrip.querySelectorAll(".hero-showcase-thumb").forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.index) === index));
+    heroShowcaseStrip.querySelectorAll(".hero-showcase-thumb").forEach((btn) => btn.classList.toggle("active", Number(btn.dataset.index) === state.index));
   };
 
-  heroShowcaseStrip.innerHTML = picks.slice(1, 4).map((item, i) => `
+  function renderStrip() {
+    heroShowcaseStrip.innerHTML = picks.slice(1, 4).map((item, i) => `
     <button type="button" class="hero-showcase-thumb ${i === 0 ? "active" : ""}" data-index="${i + 1}" aria-label="Ver imóvel em destaque ${i + 2}">
       <img ${responsiveImageAttrs(item.imagem, `Miniatura ${item.referencia}`, { width: 420, height: 280, sizes: "33vw", loading: "lazy" })} />
-      <span class="hero-showcase-thumb-label">${escapeHtml((renderPriceLine(item).replace(/<\/?.*?>/g, "").trim()) || "Consulte")}</span>
+      <span class="hero-showcase-thumb-label">${escapeHtml(String(item.venda || item.locacao || "").trim() || "Consulte")}</span>
     </button>
   `).join("");
 
-  heroShowcaseStrip.querySelectorAll(".hero-showcase-thumb").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      state.index = Number(btn.dataset.index) || 0;
-      renderMain(state.index);
+    heroShowcaseStrip.querySelectorAll(".hero-showcase-thumb").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        reorderToFront(Number(btn.dataset.index) || 0);
+      });
     });
-  });
+  }
 
-  renderMain(0);
+  renderStrip();
+  renderMain();
+}
+
+function renderDestaques() {
+  const featured = imoveis.filter((item) => item.destaque);
+  const picks = featured.length ? featured : imoveis;
+  buildHeroShowcase(picks.slice(0, 4));
 }
 
 function filterByValor(prop, range) {
@@ -619,18 +641,14 @@ function populateSelects() {
 function setImoveis(data) {
   imoveis = (Array.isArray(data) ? data : []).filter((item) => item && item.ativo !== false);
   populateSelects();
-  if (!filtersRestored) {
-    applyFilterState(loadFilterState());
-    filtersRestored = true;
-  }
+  if (!filtersRestored) filtersRestored = true;
   populateBairros(cidade?.value || "");
   [finalidade, tipo, cidade, bairro, bairroTexto, valorMin, valorMax, heroQuartos, heroSuites, heroVagas, heroCodigo, q, mobileFilterFinalidade, mobileFilterTipo, mobileFilterCidade, mobileFilterValor, mobileFilterQuartos, mobileFilterBairro].forEach(syncPlaceholderState);
   visibleCount = 12;
   updateTrustCount(imoveis.length);
   window.dispatchEvent(new CustomEvent("imoveis-ready", { detail: { total: imoveis.length } }));
-  buildHeroShowcase(imoveis.filter((i) => i.destaque).slice(0, 4).concat(imoveis.filter((i) => !i.destaque).slice(0, 4)).slice(0, 4));
-  render();
   renderDestaques();
+  render();
 }
 
 async function carregarImoveis() {
@@ -644,36 +662,19 @@ async function carregarImoveis() {
       return;
     }
   } catch (err) {
-    // mantém fallback local
+    // sem fallback local
   }
-  setImoveis(fallbackImoveis);
+  setImoveis([]);
 }
 
 function render() {
   validateValueBounds();
   syncValueBoundsOptions();
-  const term = q?.value.toLowerCase().trim() || "";
-  const filtrados = imoveis.filter((i) => {
-    const hitTerm = !term || `${i.referencia} ${i.endereco} ${i.tipo}`.toLowerCase().includes(term);
-    const hitFinalidade = !finalidade?.value || matchesFinalidade(i.finalidade, finalidade.value);
-    const hitTipo = !tipo.value || i.tipo === tipo.value;
-    const hitCategoria = !categoriaFiltro || matchesCategory(i.tipo, categoriaFiltro);
-    const hitCidade = !cidade.value || i.cidade === cidade.value;
-    const hitValor = filterByValueRange(i, valorMin?.value, valorMax?.value);
-    const hitQuartos = !filtroQuartos || Number(i.dormitorios || 0) >= Number(filtroQuartos);
-    const hitSuites = !heroSuites?.value || Number(i.suites || 0) >= Number(heroSuites.value);
-    const hitVagas = !filtroVagas || Number(i.vagas || i.garagens || 0) >= Number(filtroVagas);
-    const selectedBairro = `${bairro?.value || ""} ${bairroTexto?.value || ""}`.trim().toLowerCase();
-    const textBairro = `${i.bairro || ""} ${i.endereco || ""}`.toLowerCase();
-    const hitBairro = !selectedBairro || textBairro.includes(selectedBairro);
-    const code = String(filtroCodigo || "").trim().toLowerCase();
-    const hitCodigo = !code || String(i.referencia || i._id || "").toLowerCase().includes(code);
-    return hitTerm && hitTipo && hitCategoria && hitFinalidade && hitCidade && hitValor && hitQuartos && hitSuites && hitVagas && hitBairro && hitCodigo;
-  });
-
+  const filtrados = getFilteredImoveis();
+  const lista = filtrados.length ? filtrados : imoveis;
   stats.textContent = `${filtrados.length} imóveis encontrados de ${imoveis.length} cadastrados.`;
   if (heroSearchPreview) heroSearchPreview.textContent = `${filtrados.length} imóveis encontrados`;
-  const exibidos = filtrados.slice(0, visibleCount);
+  const exibidos = lista.slice(0, visibleCount);
   cards.innerHTML = exibidos
     .map(
       (i) => `
@@ -698,10 +699,31 @@ function render() {
     .join("");
 
   if (loadMore) {
-    loadMore.style.display = filtrados.length > visibleCount ? "inline-flex" : "none";
+    loadMore.style.display = lista.length > visibleCount ? "inline-flex" : "none";
   }
   validateValueBounds();
   renderAppliedChips();
+}
+
+function getFilteredImoveis() {
+  const term = q?.value.toLowerCase().trim() || "";
+  return imoveis.filter((i) => {
+    const hitTerm = !term || `${i.referencia} ${i.endereco} ${i.tipo}`.toLowerCase().includes(term);
+    const hitFinalidade = !finalidade?.value || matchesFinalidade(i.finalidade, finalidade.value);
+    const hitTipo = !tipo.value || i.tipo === tipo.value;
+    const hitCategoria = !categoriaFiltro || matchesCategory(i.tipo, categoriaFiltro);
+    const hitCidade = !cidade.value || i.cidade === cidade.value;
+    const hitValor = filterByValueRange(i, valorMin?.value, valorMax?.value);
+    const hitQuartos = !filtroQuartos || Number(i.dormitorios || 0) >= Number(filtroQuartos);
+    const hitSuites = !heroSuites?.value || Number(i.suites || 0) >= Number(heroSuites.value);
+    const hitVagas = !filtroVagas || Number(i.vagas || i.garagens || 0) >= Number(filtroVagas);
+    const selectedBairro = `${bairro?.value || ""} ${bairroTexto?.value || ""}`.trim().toLowerCase();
+    const textBairro = `${i.bairro || ""} ${i.endereco || ""}`.toLowerCase();
+    const hitBairro = !selectedBairro || textBairro.includes(selectedBairro);
+    const code = String(filtroCodigo || "").trim().toLowerCase();
+    const hitCodigo = !code || String(i.referencia || i._id || "").toLowerCase().includes(code);
+    return hitTerm && hitTipo && hitCategoria && hitFinalidade && hitCidade && hitValor && hitQuartos && hitSuites && hitVagas && hitBairro && hitCodigo;
+  });
 }
 
 function matchesFinalidade(value, selected) {
@@ -885,11 +907,15 @@ buildHeroShowcase(fallbackImoveis.filter((i) => i.destaque).slice(0, 4).concat(f
 render();
 carregarImoveis();
 
-const observer = new IntersectionObserver(
-  (entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add("show")),
-  { threshold: 0.2 }
-);
-document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+if (window.IntersectionObserver) {
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add("show")),
+    { threshold: 0.2 }
+  );
+  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+} else {
+  document.querySelectorAll(".reveal").forEach((el) => el.classList.add("show"));
+}
 
 window.addEventListener("scroll", () => {
   const y = window.scrollY * 0.18;

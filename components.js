@@ -24,7 +24,7 @@ function renderLayout() {
           </nav>
 
           <div class="social-mini">
-            <a class="icon-btn" href="https://wa.me/${whatsapp}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 0 1-7.6-11.5A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8.5v.5z"/></svg></a>
+            <a class="icon-btn whatsapp" href="https://wa.me/${whatsapp}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.5 8.5 0 0 1-7.6-11.5A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8.5v.5z"/></svg></a>
           </div>
         </div>
       </header>
@@ -41,8 +41,19 @@ function renderLayout() {
               <span class="brand-wordmark desktop-only">${brandName}</span>
             </div>
             <p>Rua Marechal Deodoro da Fonseca, 631 - Guanandy, Aquidauana - MS, 79200-000</p>
-            <p><strong>WhatsApp:</strong> (67) 98472-4138</p>
+            <a class="footer-contact-line" href="https://wa.me/5567984724138" target="_blank" rel="noopener">
+              <span class="footer-whatsapp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.5 3.5A11 11 0 0 0 3.2 16.8L2 22l5.4-1.4A11 11 0 1 0 20.5 3.5zm-8.9 16.1a9 9 0 0 1-4.6-1.3l-.3-.2-3.2.8.9-3.1-.2-.3A9 9 0 1 1 11.6 19.6zm5.2-6.8c-.3-.2-1.8-.9-2-1s-.4-.2-.6.2-.7 1-.9 1.2-.3.2-.6.1a7.2 7.2 0 0 1-2.1-1.3 7.9 7.9 0 0 1-1.5-1.8c-.2-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5s0-.3 0-.5-.6-1.4-.8-1.9-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3s-.9.9-.9 2.3.9 2.7 1 2.9c.1.2 1.8 2.8 4.3 3.8.6.3 1.1.4 1.5.6.6.2 1.1.2 1.5.1.5-.1 1.8-.7 2.1-1.3.3-.6.3-1.1.2-1.3s-.3-.2-.6-.4z"/></svg></span>
+              <span>(67) 98472-4138</span>
+            </a>
             <p><strong>Horário:</strong> seg a qui 09:00-11:00 / 13:00-18:00 | sex 09:00-11:00 / 13:00-18:00 | sáb e dom fechado</p>
+          </section>
+
+          <section>
+            <h3>Atuamos em</h3>
+            <ul class="city-list">
+              <li>Aquidauana</li>
+              <li>Anastácio</li>
+            </ul>
           </section>
 
           <section>
@@ -55,18 +66,13 @@ function renderLayout() {
               title="Mapa da Imobiliária"
             ></iframe>
           </section>
-
-          <section>
-            <h3>Atuamos em</h3>
-            <ul class="city-list">
-              <li>Aquidauana</li>
-              <li>Anastácio</li>
-              <li>MS e região</li>
-            </ul>
-          </section>
         </div>
         <div class="footer-signature">
-          Site BETA desenvolvido por <strong>MARCOS</strong>
+          <span class="footer-copyright">Copyright 2026 LGN Empreendimentos Imobiliários</span>
+          <a class="footer-dev-pill" href="https://wa.me/5567999638295" target="_blank" rel="noopener">
+            <span class="footer-dev-pill-label">DESENVOLVIDO POR</span>
+            <img src="https://i.postimg.cc/ZKhKH9RF/mf-dev-studio-horizontal-transparente.png" alt="MF Dev Studio" />
+          </a>
         </div>
       </footer>
     `;
