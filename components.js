@@ -9,7 +9,7 @@ function renderLayout() {
     header.innerHTML = `
       <header class="topbar">
         <div class="container topbar-wrap">
-          <a href="index.html" class="brand-link">
+          <a href="/index.html" class="brand-link">
             <img class="brand" src="${logo}" alt="${brandName}" />
           </a>
           <span class="brand-wordmark desktop-only">${brandName}</span>
@@ -17,10 +17,10 @@ function renderLayout() {
           <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
 
           <nav class="main-nav" id="main-nav">
-            <a href="index.html#home">Início</a>
-            <a href="about.html">Quem Somos</a>
-            <a href="index.html#imoveis">Imóveis</a>
-            <a href="index.html#contato">Contato</a>
+            <a href="/index.html#home">Início</a>
+            <a href="/about.html">Quem Somos</a>
+            <a href="/index.html#imoveis">Imóveis</a>
+            <a href="/index.html#contato">Contato</a>
           </nav>
 
           <div class="social-mini">

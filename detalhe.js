@@ -245,6 +245,20 @@ async function initDetail() {
     return [tipo, finalidade, bairro, cidade, ref].filter(Boolean).join("-");
   }
 
+  function propertySlugLooseFor(item) {
+    const ref = slugify(String(item.referencia || item._id || "").replace(/^[^0-9]+/, ""));
+    const tipo = slugify(item.tipo || "imovel");
+    const finalidade = item.finalidade === "venda" ? "a-venda" : item.finalidade === "aluguel" ? "para-locacao" : "a-venda-e-locacao";
+    const bairro = slugify(item.bairro || "");
+    const cidade = slugify(item.cidade || "");
+    return [tipo, finalidade, bairro, cidade, ref].filter(Boolean).join("-");
+  }
+
+  function propertyRefTail(item) {
+    const refSlug = slugify(item.referencia || item._id || "");
+    return refSlug.split("-").filter(Boolean).slice(-1)[0] || refSlug;
+  }
+
   function requestedToken() {
     const params = new URLSearchParams(window.location.search);
     const pathnameParts = window.location.pathname.split("/").filter(Boolean);
@@ -300,9 +314,16 @@ async function initDetail() {
   const refParam = requestedToken();
   const propriedades = await loadProperties();
   const target = refKey(refParam);
+  const requestedSlug = slugify(refParam);
   const imovelRaw = propriedades.find((item) => {
     const ref = refKey(item.referencia);
-    const slugMatch = slugify(refParam) && propertySlugFor(item) === slugify(refParam);
+    const refTail = propertyRefTail(item);
+    const slugMatch = requestedSlug && (
+      propertySlugFor(item) === requestedSlug ||
+      propertySlugLooseFor(item) === requestedSlug ||
+      requestedSlug.endsWith(`-${refTail}`) ||
+      requestedSlug === refTail
+    );
     return ref.raw === target.raw || ref.numeric === target.numeric || item._id === refParam || slugMatch || (!refParam && item.referencia);
   });
   const imovel = imovelRaw ? imovelRaw : null;

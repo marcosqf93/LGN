@@ -276,6 +276,11 @@ function buildInterestMessage(item) {
 
 function detailUrlFor(item) {
   const ref = refKey(item.referencia || item._id).raw;
+  if (typeof gerarSlug === "function") {
+    const endereco = String(item.endereco || item.bairro || "imovel");
+    const cidade = String(item.cidade || "");
+    return `/imoveis/${encodeURIComponent(gerarSlug(String(item.tipo || "imovel"), endereco, cidade, ref))}`;
+  }
   const tipo = String(item.tipo || "imovel").toLowerCase();
   const bairro = String(item.bairro || "").toLowerCase();
   const cidade = String(item.cidade || "").toLowerCase();
