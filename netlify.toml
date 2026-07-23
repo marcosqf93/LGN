@@ -6,4 +6,12 @@
   to = "/.netlify/functions/google-reviews"
   status = 200
 
+[[redirects]]
+  from = "/imovel/*"
+  to = "/detalhe.html"
+  status = 200
 
+[[redirects]]
+  from = "/imoveis/*"
+  to = "/detalhe.html"
+  status = 200

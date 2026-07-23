@@ -12,17 +12,22 @@
     }
     return t;
   }
-  const token = getToken();
+
+  function handleUnauthorized() {
+    localStorage.removeItem("token");
+    window.location.href = "/admin/login";
+  }
 
   async function api(path, opts = {}) {
+    const token = getToken();
+    if (!token) return new Response(null, { status: 401 });
     const headers = { Authorization: "Bearer " + token, ...opts.headers };
     if (!(opts.body instanceof FormData)) {
       headers["Content-Type"] = "application/json";
     }
     const res = await fetch(API + path, { ...opts, headers });
     if (res.status === 401) {
-      localStorage.removeItem("token");
-      window.location.href = "/admin/login";
+      handleUnauthorized();
     }
     return res;
   }
@@ -157,6 +162,10 @@
           else el.value = data[k] || "";
         }
       });
+      ["temAreaGourmet", "financiavel", "aceitaProposta", "aceitaVeiculo", "imovelNovo", "piscina", "murado", "documentacaoRegular"].forEach((k) => {
+        const el = form.elements[k];
+        if (el && el.type === "checkbox") el.checked = Boolean(data[k] || (k === "temAreaGourmet" && data.areaGourmet));
+      });
       imagensInput.value = JSON.stringify(uploadedImages);
     } else {
       imagensInput.value = "[]";
@@ -183,6 +192,8 @@
   imageUpload.addEventListener("change", async () => {
     const files = imageUpload.files;
     if (!files.length) return;
+    const token = getToken();
+    if (!token) return;
     const fd = new FormData();
     for (const f of files) fd.append("imagens", f);
     try {
@@ -191,6 +202,10 @@
         headers: { Authorization: "Bearer " + token },
         body: fd,
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.details || data.error || "Upload failed");
       uploadedImages = uploadedImages.concat(data.urls);
@@ -244,6 +259,9 @@
     } catch {
       data.imagens = [];
     }
+    ["temAreaGourmet", "financiavel", "aceitaProposta", "aceitaVeiculo", "imovelNovo", "piscina", "murado", "documentacaoRegular"].forEach((k) => {
+      if (typeof data[k] !== "boolean") data[k] = false;
+    });
     if (!data.tipo || !data.finalidade || !data.cidade) {
       formError.textContent = "Preencha Tipo, Finalidade e Cidade.";
       return;

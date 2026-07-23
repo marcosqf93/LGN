@@ -47,6 +47,14 @@ function normalizeProperty(item, extra = {}) {
     copa: Number(item.copa || 0),
     areaTotal: Number(item.areaTotal ?? item.metragem ?? 0),
     areaConstruida: Number(item.areaConstruida ?? item.metragem ?? 0),
+    temAreaGourmet: Boolean(item.temAreaGourmet ?? extra.temAreaGourmet ?? item.areaGourmet),
+    financiavel: Boolean(item.financiavel ?? extra.financiavel),
+    aceitaProposta: Boolean(item.aceitaProposta ?? extra.aceitaProposta),
+    aceitaVeiculo: Boolean(item.aceitaVeiculo ?? extra.aceitaVeiculo),
+    imovelNovo: Boolean(item.imovelNovo ?? extra.imovelNovo),
+    piscina: Boolean(item.piscina ?? extra.piscina),
+    murado: Boolean(item.murado ?? extra.murado),
+    documentacaoRegular: Boolean(item.documentacaoRegular ?? extra.documentacaoRegular),
     area: extra.area || item.area || (item.areaTotal || item.areaConstruida || item.metragem ? `${item.areaTotal || item.areaConstruida || item.metragem} m²` : ""),
     metragem: Number(item.metragem || item.areaTotal || item.areaConstruida || 0),
     venda: item.venda || formatMoney(item.valorVenda),
@@ -264,6 +272,20 @@ function buildInterestMessage(item) {
   if (bairroValue) message += `, localizado no Bairro ${bairroValue}`;
   message += `. Gostaria de receber mais informações e verificar disponibilidade para visita.`;
   return encodeURIComponent(message);
+}
+
+function detailUrlFor(item) {
+  const ref = refKey(item.referencia || item._id).raw;
+  const tipo = String(item.tipo || "imovel").toLowerCase();
+  const bairro = String(item.bairro || "").toLowerCase();
+  const cidade = String(item.cidade || "").toLowerCase();
+  const title = [tipo, item.finalidade === "venda" ? "a-venda" : item.finalidade === "aluguel" ? "para-locacao" : "a-venda-e-locacao", bairro, cidade, ref]
+    .filter(Boolean)
+    .join("-")
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `/imoveis/${encodeURIComponent(title || ref)}`;
 }
 
 function isHeroResidential(type) {
@@ -690,7 +712,7 @@ function render() {
           ${renderFeatureIcons(i, 4)}
           ${renderPriceLine(i)}
           <div class="card-actions">
-            <a class="btn btn-primary" href="/detalhe.html?id=${encodeURIComponent(refKey(i.referencia || i._id).raw)}">Ver detalhes</a>
+            <a class="btn btn-primary" href="${detailUrlFor(i)}">Ver detalhes</a>
              <a class="btn btn-outline" href="https://wa.me/5567984724138?text=${buildInterestMessage(i)}" target="_blank" rel="noopener">Tenho interesse</a>
           </div>
         </div>

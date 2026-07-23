@@ -220,7 +220,27 @@ body {
 @media (max-width:500px) { .form-row { grid-template-columns: 1fr; } }
 .form-fieldset { border: 1px solid var(--line); border-radius: 12px; padding: .8rem; margin: .6rem 0; }
 .form-fieldset legend { font-weight: 700; font-size: .8rem; color: var(--muted); padding: 0 .3rem; }
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem .8rem;
+}
+.check-grid label {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  margin: 0;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.check-grid input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
 .form-error { color: #c0392b; font-size: .82rem; margin: .4rem 0; }
 .form-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: .8rem; }
 .image-preview { display: flex; gap: 6px; flex-wrap: wrap; margin-top: .5rem; }
 .image-preview img { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
+@media (max-width:500px) {
+  .form-row { grid-template-columns: 1fr; }
+  .check-grid { grid-template-columns: 1fr; }
+}

@@ -73,6 +73,14 @@ async function initDetail() {
       copa: Number(item.copa || 0),
       areaTotal: Number(item.areaTotal ?? item.metragem ?? 0),
       areaConstruida: Number(item.areaConstruida ?? item.metragem ?? 0),
+      temAreaGourmet: Boolean(item.temAreaGourmet ?? extra.temAreaGourmet ?? item.areaGourmet),
+      financiavel: Boolean(item.financiavel ?? extra.financiavel),
+      aceitaProposta: Boolean(item.aceitaProposta ?? extra.aceitaProposta),
+      aceitaVeiculo: Boolean(item.aceitaVeiculo ?? extra.aceitaVeiculo),
+      imovelNovo: Boolean(item.imovelNovo ?? extra.imovelNovo),
+      piscina: Boolean(item.piscina ?? extra.piscina),
+      murado: Boolean(item.murado ?? extra.murado),
+      documentacaoRegular: Boolean(item.documentacaoRegular ?? extra.documentacaoRegular),
       area: extra.area || item.area || (item.areaTotal || item.areaConstruida || item.metragem ? `${item.areaTotal || item.areaConstruida || item.metragem} m²` : ""),
       metragem: Number(item.metragem || item.areaTotal || item.areaConstruida || 0),
       venda: item.venda || formatMoney(item.valorVenda),
@@ -161,6 +169,32 @@ async function initDetail() {
     return cards;
   }
 
+  function detailDifferentials(item) {
+    const entries = [
+      { key: "financiavel", label: "Financiável", value: item.financiavel },
+      { key: "aceitaProposta", label: "Aceita proposta", value: item.aceitaProposta },
+      { key: "aceitaVeiculo", label: "Aceita veículo", value: item.aceitaVeiculo },
+      { key: "imovelNovo", label: "Imóvel novo", value: item.imovelNovo },
+      { key: "areaGourmet", label: "Área gourmet", value: item.temAreaGourmet || item.areaGourmet > 0 },
+      { key: "piscina", label: "Piscina", value: item.piscina },
+      { key: "murado", label: "Murado", value: item.murado },
+      { key: "documentacaoRegular", label: "Documentação regular", value: item.documentacaoRegular },
+    ];
+    const active = entries.filter((entry) => Boolean(entry.value) || Number(entry.value) > 0);
+    if (!active.length) return "";
+    return `
+      <section class="detail-differentials">
+        <div class="section-title-wrap">
+          <p class="eyebrow">Diferenciais</p>
+          <h2>Diferenciais</h2>
+        </div>
+        <div class="detail-differentials-grid">
+          ${active.map((entry) => `<span class="detail-diff-chip">${entry.label}</span>`).join("")}
+        </div>
+      </section>
+    `;
+  }
+
   function propertyFeatureEntries(item) {
     return [
       { key: "suites", label: "Suíte", value: item.suites },
@@ -192,6 +226,55 @@ async function initDetail() {
     return encodeURIComponent(message);
   }
 
+  function slugify(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  function propertySlugFor(item) {
+    const tipo = slugify(item.tipo || "imovel");
+    const finalidade = item.finalidade === "venda" ? "a-venda" : item.finalidade === "aluguel" ? "para-locacao" : "a-venda-e-locacao";
+    const bairro = slugify(item.bairro || "");
+    const cidade = slugify(item.cidade || "");
+    const ref = slugify(item.referencia || item._id || "");
+    return [tipo, finalidade, bairro, cidade, ref].filter(Boolean).join("-");
+  }
+
+  function requestedToken() {
+    const params = new URLSearchParams(window.location.search);
+    const pathnameParts = window.location.pathname.split("/").filter(Boolean);
+    const pathToken = (pathnameParts[0] === "imovel" || pathnameParts[0] === "imoveis") ? decodeURIComponent(pathnameParts.slice(1).join("/") || "") : "";
+    return params.get("ref") || params.get("id") || pathToken || "";
+  }
+
+  function detailUrlFor(item) {
+    return `/imoveis/${encodeURIComponent(propertySlugFor(item))}`;
+  }
+
+  function propertyTitle(item) {
+    const acao = acaoLabel(item.finalidade);
+    const acaoText = acao === "Venda" ? "à venda" : acao === "Locação" ? "para locação" : "à venda e locação";
+    const local = item.bairro ? `no Bairro ${item.bairro}, ${item.cidade}` : `${item.cidade}`;
+    return `${item.tipo} ${acaoText} ${local} – ${item.referencia || item._id} | LGN Imóveis`;
+  }
+
+  function propertyDescription(item) {
+    const parts = [];
+    const local = item.bairro ? `no Bairro ${item.bairro}, em ${item.cidade}-MS` : `em ${item.cidade}-MS`;
+    parts.push(`${item.tipo} ${acaoLabel(item.finalidade).toLowerCase()} ${local}`);
+    if (item.dormitorios) parts.push(`${item.dormitorios} quartos`);
+    if (item.suites) parts.push(`${item.suites} suíte${item.suites > 1 ? "s" : ""}`);
+    if (item.vagas) parts.push(`${item.vagas} vaga${item.vagas > 1 ? "s" : ""}`);
+    const areaValue = item.areaTotal || item.areaConstruida || item.metragem;
+    if (areaValue) parts.push(`${areaValue} m²`);
+    return `${parts.join(", ")}. Consulte o valor e agende uma visita.`;
+  }
+
   async function loadProperties() {
     try {
       const response = await fetch(API_URL, { cache: "no-store" });
@@ -214,13 +297,13 @@ async function initDetail() {
     }).filter((item) => item.ativo !== false);
   }
 
-  const params = new URLSearchParams(window.location.search);
-  const refParam = params.get("ref") || params.get("id") || "";
+  const refParam = requestedToken();
   const propriedades = await loadProperties();
   const target = refKey(refParam);
   const imovelRaw = propriedades.find((item) => {
     const ref = refKey(item.referencia);
-    return ref.raw === target.raw || ref.numeric === target.numeric || item._id === refParam || (!refParam && item.referencia);
+    const slugMatch = slugify(refParam) && propertySlugFor(item) === slugify(refParam);
+    return ref.raw === target.raw || ref.numeric === target.numeric || item._id === refParam || slugMatch || (!refParam && item.referencia);
   });
   const imovel = imovelRaw ? imovelRaw : null;
   if (!box) return;
@@ -252,11 +335,12 @@ async function initDetail() {
     const whatsAppSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3.2 16.8L2 22l5.4-1.4A11 11 0 1 0 20.5 3.5zm-8.9 16.1a9 9 0 0 1-4.6-1.3l-.3-.2-3.2.8.9-3.1-.2-.3A9 9 0 1 1 11.6 19.6zm5.2-6.8c-.3-.2-1.8-.9-2-1s-.4-.2-.6.2-.7 1-.9 1.2-.3.2-.6.1a7.2 7.2 0 0 1-2.1-1.3 7.9 7.9 0 0 1-1.5-1.8c-.2-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5s0-.3 0-.5-.6-1.4-.8-1.9-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3s-.9.9-.9 2.3.9 2.7 1 2.9c.1.2 1.8 2.8 4.3 3.8.6.3 1.1.4 1.5.6.6.2 1.1.2 1.5.1.5-.1 1.8-.7 2.1-1.3.3-.6.3-1.1.2-1.3s-.3-.2-.6-.4z"/></svg>';
     const shareSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>';
 
-    const seoTitle = `${imovel.endereco} - ${imovel.tipo} em ${imovel.cidade} | LGN Empreendimentos Imobiliários`;
-    const seoDesc = `${imovel.tipo} ${imovel.finalidade === "venda" ? "à venda" : imovel.finalidade === "aluguel" ? "para locação" : "para venda e locação"} em ${imovel.cidade}. ${imovel.dormitorios} dormitório(s), ${imovel.vagas} vaga(s), ${imovel.area}. Fale com a LGN Empreendimentos Imobiliários.`;
+    const seoTitle = propertyTitle(imovel);
+    const seoDesc = propertyDescription(imovel);
     document.title = seoTitle;
     const setMeta = (sel, attr, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(attr, val); };
-    const slugUrl = `${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(imovel.referencia)}`;
+    const canonicalPath = detailUrlFor(imovel);
+    const slugUrl = `${window.location.origin}${canonicalPath}`;
     setMeta('meta[name="description"]', "content", seoDesc);
     setMeta('meta[property="og:title"]', "content", seoTitle);
     setMeta('meta[property="og:description"]', "content", seoDesc);
@@ -266,6 +350,9 @@ async function initDetail() {
     setMeta('meta[property="og:image:type"]', "content", "image/jpeg");
     setMeta('meta[property="og:url"]', "content", slugUrl);
     setMeta('link[rel="canonical"]', "href", slugUrl);
+    if (window.location.protocol !== "file:" && window.location.pathname !== canonicalPath) {
+      history.replaceState({}, "", canonicalPath);
+    }
 
     const schemaTypeMap = {
       "Casa": "House", "Sobrado": "House", "Kitnet": "Apartment",
@@ -281,15 +368,16 @@ async function initDetail() {
     const ldData = {
       "@context": "https://schema.org",
       "@type": ["Product", schemaType],
-      "name": `${imovel.tipo} - ${imovel.endereco}`,
+      "name": seoTitle,
       "description": seoDesc,
       "image": fotos,
-      "url": window.location.href,
+      "url": slugUrl,
       "category": imovel.tipo,
       "additionalProperty": [
         {"@type": "PropertyValue", "name": "Dormitórios", "value": imovel.dormitorios},
         {"@type": "PropertyValue", "name": "Vagas", "value": imovel.vagas},
-        {"@type": "PropertyValue", "name": "Área", "value": imovel.area}
+        {"@type": "PropertyValue", "name": "Área total", "value": imovel.areaTotal || imovel.areaConstruida || imovel.metragem},
+        {"@type": "PropertyValue", "name": "Área construída", "value": imovel.areaConstruida || imovel.areaTotal || imovel.metragem}
       ]
     };
     if (preco) {
@@ -352,6 +440,8 @@ async function initDetail() {
           ${highlightCards.map((item) => item.type === "text" ? `<div class="detail-card detail-card-text"><span>${item.label}</span><strong>${item.value}</strong></div>` : `<div class="detail-card detail-card-feature" title="${item.label}: ${item.value}"><span class="detail-card-icon">${featureIcon(item.key)}</span><span class="detail-card-meta"><span class="detail-card-label">${item.label}</span><strong>${item.value}</strong></span></div>`).join("")}
         </div>
 
+        ${detailDifferentials(imovel)}
+
         <p class="descricao-imovel">
           Referência: <strong>${escapeHtml(imovel.referencia || imovel._id || "")}</strong><br>
           ${imovel.tipo} localizado em ${imovel.cidade}, na região ${imovel.endereco}. Disponibilidade para ${acao.toLowerCase()}.
@@ -385,7 +475,7 @@ async function initDetail() {
           const foto = (extra && extra.fotos && extra.fotos[0]) || item.imagem;
           const endereco = (extra && extra.endereco) || item.endereco;
           const cidade = (extra && extra.cidade) || item.cidade;
-          const url = `/detalhe.html?id=${encodeURIComponent(item.referencia)}`;
+          const url = detailUrlFor(item.referencia);
           return `
             <article class="card card-similar">
               <div class="thumb-wrap"><img ${responsiveImageAttrs(foto, `Imóvel ${item.referencia}`, { width: 800, height: 600, sizes: "(max-width: 768px) 100vw, 33vw", loading: "lazy" })} /></div>
